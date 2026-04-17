@@ -4,7 +4,9 @@ services:
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
+    startCommand: "gunicorn app:app"
     envVars:
       - key: OPENAI_API_KEY
+        sync: false
+      - key: TELEGRAM_TOKEN
         sync: false
