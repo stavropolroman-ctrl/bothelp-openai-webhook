@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Запись на уроки английского</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:   #2563eb;
+      --blue-d: #1d4ed8;
+      --green:  #16a34a;
+      --bg:     #f8fafc;
+      --card:   #ffffff;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+      color: #fff;
+      text-align: center;
+      padding: 80px 20px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      bottom: -2px; left: 0; right: 0;
+      height: 60px;
+      background: var(--bg);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .flag { font-size: 48px; margin-bottom: 12px; }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: #fde68a; }
+    .hero p {
+      font-size: clamp(16px, 2.5vw, 20px);
+      opacity: .88;
+      max-width: 560px;
+      margin: 0 auto 32px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 28px;
+      letter-spacing: .5px;
+    }
+
+    /* ── BENEFITS ── */
+    .section { padding: 64px 20px; max-width: 900px; margin: 0 auto; }
+    .section-title {
+      text-align: center;
+      font-size: clamp(22px, 3.5vw, 34px);
+      font-weight: 700;
+      margin-bottom: 40px;
+    }
+    .benefits {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .benefit {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .benefit:hover { box-shadow: 0 8px 28px rgba(37,99,235,.12); transform: translateY(-3px); }
+    .benefit .icon { font-size: 38px; margin-bottom: 14px; }
+    .benefit h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .benefit p  { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── FORM CARD ── */
+    .form-wrap {
+      background: var(--bg);
+      padding: 0 20px 80px;
+    }
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 44px 40px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.07);
+    }
+    .form-card h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .form-card .sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    input[type="text"],
+    input[type="email"],
+    select {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 18px;
+      background: #fff;
+      color: var(--text);
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--blue); }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: 4px;
+    }
+    .btn:hover  { background: var(--blue-d); }
+    .btn:active { transform: scale(.98); }
+
+    .privacy {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 14px;
+    }
+
+    /* ── SUCCESS ── */
+    .success-box {
+      display: none;
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .success-box .check { font-size: 56px; margin-bottom: 12px; }
+    .success-box h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .success-box p  { color: var(--muted); font-size: 15px; }
+
+    /* ── ERROR ── */
+    .error-msg {
+      color: #dc2626;
+      font-size: 13px;
+      margin-top: -10px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 480px) {
+      .form-card { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="flag">🇺🇸</div>
+  <div class="badge">✦ Бесплатный первый урок</div>
+  <h1>Заговори на <span>американском&nbsp;английском</span></h1>
+  <p>Индивидуальные онлайн-уроки с AI-преподавателем. Реальные диалоги, правильное произношение, уверенность в общении.</p>
+</section>
+
+<!-- BENEFITS -->
+<div class="section">
+  <div class="section-title">Почему это работает</div>
+  <div class="benefits">
+    <div class="benefit">
+      <div class="icon">🎯</div>
+      <h3>Программа под тебя</h3>
+      <p>Уроки строятся на твоём уровне и целях — нет лишнего, только нужное.</p>
+    </div>
+    <div class="benefit">
+      <div class="icon">🗣️</div>
+      <h3>Разговорный фокус</h3>
+      <p>Ты говоришь с первого урока. Никакой скучной теории без практики.</p>
+    </div>
+    <div class="benefit">
+      <div class="icon">⚡</div>
+      <h3>Доступно 24/7</h3>
+      <p>AI-ассистент отвечает на вопросы в любое время — учись в своём ритме.</p>
+    </div>
+    <div class="benefit">
+      <div class="icon">📈</div>
+      <h3>Виден прогресс</h3>
+      <p>Каждый урок отслеживается. Ты видишь, как растёт твой уровень.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FORM -->
+<div class="form-wrap">
+  <div class="form-card">
+
+    <!-- FORM STATE -->
+    <div id="form-state">
+      <h2>Записаться на урок</h2>
+      <p class="sub">Оставь имейл — пришлём расписание и детали</p>
+
+      <form id="signup-form" novalidate>
+        <label for="name">Ваше имя</label>
+        <input id="name" name="name" type="text" placeholder="Например: Анна" autocomplete="name" />
+
+        <label for="email">Email <span style="color:#dc2626">*</span></label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+        <div class="error-msg" id="email-error">Пожалуйста, введите корректный email</div>
+
+        <label for="level">Уровень английского</label>
+        <select id="level" name="level">
+          <option value="">— Выберите уровень —</option>
+          <option value="beginner">Начинающий (A1–A2)</option>
+          <option value="elementary">Элементарный (A2–B1)</option>
+          <option value="intermediate">Средний (B1–B2)</option>
+          <option value="upper">Выше среднего (B2–C1)</option>
+          <option value="advanced">Продвинутый (C1–C2)</option>
+        </select>
+
+        <button type="submit" class="btn" id="submit-btn">
+          Получить первый урок бесплатно →
+        </button>
+      </form>
+      <p class="privacy">🔒 Никакого спама. Только полезная информация об уроках.</p>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-box" id="success-state">
+      <div class="check">✅</div>
+      <h3>Отлично! Вы в списке</h3>
+      <p>Мы свяжемся с вами в ближайшее время и пришлём детали первого бесплатного урока.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>© 2026 English Lessons · Все права защищены</footer>
+
+<script>
+  const form  = document.getElementById("signup-form");
+  const emailInput  = document.getElementById("email");
+  const emailError  = document.getElementById("email-error");
+  const submitBtn   = document.getElementById("submit-btn");
+  const formState   = document.getElementById("form-state");
+  const successState = document.getElementById("success-state");
+
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = emailInput.value.trim();
+    if (!isValidEmail(email)) {
+      emailError.style.display = "block";
+      emailInput.focus();
+      return;
+    }
+    emailError.style.display = "none";
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Отправляем…";
+
+    try {
+      const res = await fetch("/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:  document.getElementById("name").value.trim(),
+          email: email,
+          level: document.getElementById("level").value,
+        }),
+      });
+
+      if (res.ok) {
+        formState.style.display = "none";
+        successState.style.display = "block";
+      } else {
+        throw new Error("server error");
+      }
+    } catch {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Получить первый урок бесплатно →";
+      alert("Произошла ошибка. Попробуйте ещё раз.");
+    }
+  });
+</script>
+</body>
+</html>
