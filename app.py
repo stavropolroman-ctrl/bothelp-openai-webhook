@@ -7,7 +7,9 @@ app = Flask(__name__)
 
 _signups_lock = threading.Lock()
 SIGNUPS_FILE = os.environ.get("SIGNUPS_FILE", "signups.csv")
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+def get_client():
+    return OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 USER_STORES = {}
 
@@ -59,6 +61,7 @@ SYSTEM_PROMPT = (
 def ensure_vector_store(user_id):
     vs_id = USER_STORES.get(user_id)
     if not vs_id:
+        client = get_client()
         vs = client.vector_stores.create(name=f"tg_{user_id}")
         vs_id = vs.id
         USER_STORES[user_id] = vs_id
@@ -71,6 +74,7 @@ def upload():
     file_url = data["file_url"]
     vs_id = ensure_vector_store(user_id)
 
+    client = get_client()
     r = requests.get(file_url, timeout=60)
     with tempfile.NamedTemporaryFile(delete=False) as f:
         f.write(r.content)
@@ -91,6 +95,7 @@ def ask():
 
     prompt = f"{SYSTEM_PROMPT}\n\nКонтекст:\n{history}\n\nВопрос:\n{question}"
 
+    client = get_client()
     resp = client.responses.create(
         model="gpt-4o-mini",
         tools=[{"type": "file_search", "vector_store_ids": [vs_id]}],
