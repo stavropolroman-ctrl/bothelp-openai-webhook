@@ -9,7 +9,8 @@ USER_STORES = {}
 
 @app.get("/cowork-replay")
 def cowork_replay():
-    return send_from_directory(os.path.dirname(__file__), "cowork-replay.html")
+    base = os.path.abspath(os.path.dirname(__file__)) or os.getcwd()
+    return send_from_directory(base, "cowork-replay.html")
 
 SYSTEM_PROMPT = (
   "Ты — преподаватель американского английского языка. "
