@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from openai import OpenAI
 import os, tempfile, requests
 
@@ -9,8 +9,9 @@ USER_STORES = {}
 
 @app.get("/cowork-replay")
 def cowork_replay():
-    base = os.path.abspath(os.path.dirname(__file__)) or os.getcwd()
-    return send_from_directory(base, "cowork-replay.html")
+    html_path = os.path.join(os.path.abspath(os.path.dirname(__file__) or os.getcwd()), "cowork-replay.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
 
 SYSTEM_PROMPT = (
   "Ты — преподаватель американского английского языка. "
