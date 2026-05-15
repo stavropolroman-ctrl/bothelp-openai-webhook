@@ -1,11 +1,54 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
-import os, tempfile, requests
+import os, tempfile, requests, csv, threading
+from datetime import datetime
 
 app = Flask(__name__)
+
+_signups_lock = threading.Lock()
+SIGNUPS_FILE = os.environ.get("SIGNUPS_FILE", "signups.csv")
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 USER_STORES = {}
+
+# ── Subscription page ──────────────────────────────────────────────────────
+
+@app.get("/")
+def index():
+    return render_template("index.html")
+
+@app.post("/signup")
+def signup():
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip()
+    if not email or "@" not in email:
+        return jsonify({"ok": False, "error": "invalid email"}), 400
+
+    name  = (data.get("name") or "").strip()
+    level = (data.get("level") or "").strip()
+    ts    = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+    with _signups_lock:
+        write_header = not os.path.exists(SIGNUPS_FILE)
+        with open(SIGNUPS_FILE, "a", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            if write_header:
+                w.writerow(["timestamp", "email", "name", "level"])
+            w.writerow([ts, email, name, level])
+
+    return jsonify({"ok": True})
+
+@app.get("/signups")
+def list_signups():
+    secret = os.environ.get("ADMIN_SECRET")
+    if secret and request.args.get("secret") != secret:
+        return jsonify({"error": "forbidden"}), 403
+
+    rows = []
+    if os.path.exists(SIGNUPS_FILE):
+        with open(SIGNUPS_FILE, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+    return jsonify({"count": len(rows), "signups": rows})
 
 SYSTEM_PROMPT = (
   "Ты — преподаватель американского английского языка. "
