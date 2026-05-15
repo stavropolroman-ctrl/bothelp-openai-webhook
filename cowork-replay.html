@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Cowork: Онлайн-бизнес без вас</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #F2EDE8;
+            min-height: 100vh;
+        }
+
+        /* ── Countdown bar ── */
+        .countdown-bar {
+            background: #1A2235;
+            padding: 20px 16px 22px;
+            text-align: center;
+            border-bottom: 3px solid #C4612A;
+        }
+
+        .countdown-title {
+            color: #D8D0C8;
+            font-size: 15px;
+            margin-bottom: 16px;
+            letter-spacing: 0.2px;
+        }
+
+        .countdown-title strong {
+            color: #C4612A;
+            font-weight: 600;
+        }
+
+        .countdown-timer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-block {
+            border: 2px solid #C4612A;
+            border-radius: 8px;
+            padding: 10px 14px;
+            min-width: 62px;
+            text-align: center;
+        }
+
+        .time-number {
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+            color: #C4612A;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-label {
+            display: block;
+            font-size: 10px;
+            color: #7A8A9E;
+            margin-top: 5px;
+            letter-spacing: 0.8px;
+        }
+
+        .time-sep {
+            color: #C4612A;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 14px;
+        }
+
+        /* ── Main content ── */
+        .main {
+            padding: 32px 20px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-block;
+            border: 1.5px solid #C4612A;
+            color: #C4612A;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            padding: 7px 14px;
+            border-radius: 4px;
+            margin-bottom: 22px;
+            text-transform: uppercase;
+        }
+
+        .main-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.15;
+            color: #1A2235;
+            margin-bottom: 18px;
+        }
+
+        .main-title .accent {
+            color: #C4612A;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #5A6678;
+            line-height: 1.65;
+            margin-bottom: 26px;
+        }
+
+        /* ── Video thumbnail ── */
+        .video-wrap {
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            aspect-ratio: 16 / 10;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+        }
+
+        .v-sidebar {
+            width: 22%;
+            background: #111826;
+            padding: 8px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        .v-thumb {
+            background: #1C2845;
+            border: 1px solid #2A3650;
+            border-radius: 3px;
+            flex: 1;
+            max-height: 40px;
+        }
+
+        .v-thumb.active {
+            border-color: #C4612A;
+        }
+
+        .v-num {
+            font-size: 8px;
+            color: #5A6A7E;
+            text-align: right;
+            padding: 1px 2px;
+        }
+
+        .v-main {
+            flex: 1;
+            background: linear-gradient(140deg, #1A2440 0%, #232E52 55%, #1A2235 100%);
+            position: relative;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .v-circle-1 {
+            position: absolute;
+            right: -24px;
+            bottom: -24px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: rgba(90, 100, 160, 0.35);
+        }
+
+        .v-circle-2 {
+            position: absolute;
+            right: 36px;
+            bottom: 10px;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(70, 80, 130, 0.25);
+        }
+
+        .v-label {
+            position: absolute;
+            top: 11px;
+            left: 14px;
+            font-size: 8px;
+            letter-spacing: 2px;
+            color: #7A8A9E;
+            text-transform: uppercase;
+        }
+
+        .v-speaker {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 46px;
+            height: 46px;
+            border-radius: 6px;
+            background: #7A6050;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .v-title {
+            font-family: Georgia, serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            margin-top: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .v-subtitle {
+            font-family: Georgia, serif;
+            font-size: 15px;
+            color: #C4A882;
+            font-style: italic;
+            margin-top: 3px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .v-desc {
+            font-size: 8px;
+            color: #7A8A9E;
+            margin-top: 10px;
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
+        .v-date {
+            font-size: 8px;
+            color: #7A8A9E;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            width: 48px;
+            height: 3px;
+            background: #C4612A;
+            border-radius: 2px;
+            margin: 28px auto;
+        }
+
+        /* ── CTA button ── */
+        .cta {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #C4612A;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 18px 22px;
+            width: 100%;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.35;
+            transition: background 0.2s ease;
+        }
+
+        .cta:hover {
+            background: #B0571F;
+        }
+
+        .cta-arrow {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.55);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            margin-top: 64px;
+            padding: 22px 20px;
+            border-top: 1px solid #DDD5CC;
+            text-align: center;
+            color: #9BA3AD;
+            font-size: 14px;
+        }
+
+        @media (max-width: 360px) {
+            .time-block { min-width: 54px; padding: 8px 10px; }
+            .time-number { font-size: 24px; }
+            .main-title { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Countdown -->
+    <div class="countdown-bar">
+        <div class="countdown-title">До <strong>повышения цены</strong> осталось:</div>
+        <div class="countdown-timer">
+            <div class="time-block">
+                <span class="time-number" id="cd-days">00</span>
+                <span class="time-label">ДН</span>
+            </div>
+            <span class="time-sep">:</span>
+            <div class="time-block">
+                <span class="time-number" id="cd-hours">12</span>
+                <span class="time-label">Ч</span>
+            </div>
+            <span class="time-sep">:</span>
+            <div class="time-block">
+                <span class="time-number" id="cd-minutes">21</span>
+                <span class="time-label">МИН</span>
+            </div>
+            <span class="time-sep">:</span>
+            <div class="time-block">
+                <span class="time-number" id="cd-seconds">50</span>
+                <span class="time-label">СЕК</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+        <span class="badge">Запись вебинара</span>
+
+        <h1 class="main-title">
+            «Claude Cowork:<br>
+            <span class="accent">Онлайн-бизнес без<br>вас»</span>
+        </h1>
+
+        <p class="subtitle">
+            Смотрите полную запись вебинара и узнайте, как автоматизировать онлайн-бизнес прямо на вашем рабочем столе!
+        </p>
+
+        <!-- Video preview -->
+        <div class="video-wrap">
+            <div class="v-sidebar">
+                <div class="v-thumb active"></div>
+                <div class="v-num">1</div>
+                <div class="v-thumb"></div>
+                <div class="v-num">2</div>
+                <div class="v-thumb"></div>
+                <div class="v-num">3</div>
+                <div class="v-thumb"></div>
+                <div class="v-num">4</div>
+            </div>
+            <div class="v-main">
+                <div class="v-circle-1"></div>
+                <div class="v-circle-2"></div>
+                <span class="v-label">Бесплатный вебинар</span>
+                <div class="v-speaker">👤</div>
+                <div class="v-title">Claude Cowork:<br>Онлайн-бизнес</div>
+                <div class="v-subtitle">без вас</div>
+                <div class="v-desc">Как Claude работает на вашем рабочем столе — пока вы спите</div>
+                <div class="v-date">14 МАЯ 2026 · 19:00 МСК</div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- CTA -->
+        <a href="#" class="cta">
+            <span class="cta-arrow">→</span>
+            <span>Узнать подробнее об интенсиве по <strong>Claude Cowork</strong></span>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">Служба поддержки</div>
+
+    <script>
+        // Countdown deadline: 12 h 22 min from page load
+        const deadline = new Date(Date.now() + (12 * 3600 + 22 * 60) * 1000);
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function tick() {
+            const diff = Math.max(0, deadline - Date.now());
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            document.getElementById('cd-days').textContent    = pad(d);
+            document.getElementById('cd-hours').textContent   = pad(h);
+            document.getElementById('cd-minutes').textContent = pad(m);
+            document.getElementById('cd-seconds').textContent = pad(s);
+        }
+
+        tick();
+        setInterval(tick, 1000);
+    </script>
+
+</body>
+</html>
