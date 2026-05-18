@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Войти — Панель управления</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #F2EDE8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.08);
+    }
+    .logo {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1A2235;
+      margin-bottom: 6px;
+    }
+    .logo span { color: #C4612A; }
+    .subtitle {
+      font-size: 13px;
+      color: #7A8A9E;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    h1 { font-size: 24px; font-weight: 700; color: #1A2235; margin-bottom: 8px; }
+    .desc { font-size: 15px; color: #6B7280; margin-bottom: 28px; line-height: 1.5; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #6B7280; margin-bottom: 6px; }
+    input[type=password] {
+      width: 100%;
+      border: 1.5px solid #E4E7EC;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      color: #1A2235;
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 20px;
+    }
+    input[type=password]:focus {
+      outline: none;
+      border-color: #C4612A;
+      box-shadow: 0 0 0 3px rgba(196,97,42,.12);
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      background: #C4612A;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn:hover { background: #B0571F; }
+    .error {
+      background: rgba(220,38,38,.08);
+      border: 1px solid rgba(220,38,38,.25);
+      color: #DC2626;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .back { display: block; text-align: center; margin-top: 20px; font-size: 14px; color: #9BA3AF; text-decoration: none; }
+    .back:hover { color: #C4612A; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Claude<span> Cowork</span></div>
+  <div class="subtitle">Панель управления</div>
+  <h1>Вход</h1>
+  <p class="desc">Введите пароль администратора для доступа к редактору контента.</p>
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+  <form method="POST" action="/admin/login">
+    <label for="password">Пароль</label>
+    <input type="password" id="password" name="password" placeholder="••••••••" autofocus>
+    <button type="submit" class="btn">Войти в панель</button>
+  </form>
+  <a href="/" class="back">← Вернуться на сайт</a>
+</div>
+</body>
+</html>

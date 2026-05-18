@@ -1,11 +1,77 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, session, redirect
 from openai import OpenAI
-import os, tempfile, requests
+import os, tempfile, requests, json
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
+
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+CONTENT_FILE   = os.path.join(os.path.dirname(os.path.abspath(__file__)) or os.getcwd(), "content.json")
 
 USER_STORES = {}
+
+# ── Content helpers ──────────────────────────────────────────────────────────
+
+def load_content():
+    with open(CONTENT_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_content(data):
+    with open(CONTENT_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# ── Landing page ─────────────────────────────────────────────────────────────
+
+@app.get("/")
+def index():
+    return render_template("index.html", c=load_content())
+
+# ── Admin panel ──────────────────────────────────────────────────────────────
+
+@app.get("/admin")
+def admin():
+    if not session.get("admin"):
+        return redirect("/admin/login")
+    return render_template("admin.html")
+
+@app.get("/admin/login")
+def admin_login_get():
+    if session.get("admin"):
+        return redirect("/admin")
+    return render_template("admin_login.html", error=None)
+
+@app.post("/admin/login")
+def admin_login_post():
+    if request.form.get("password", "") == ADMIN_PASSWORD:
+        session["admin"] = True
+        return redirect("/admin")
+    return render_template("admin_login.html", error="Неверный пароль. Попробуйте снова.")
+
+@app.get("/admin/logout")
+def admin_logout():
+    session.pop("admin", None)
+    return redirect("/admin/login")
+
+# ── Content API ──────────────────────────────────────────────────────────────
+
+@app.get("/api/content")
+def api_get_content():
+    if not session.get("admin"):
+        return jsonify({"error": "Unauthorized"}), 401
+    return jsonify(load_content())
+
+@app.post("/api/content")
+def api_post_content():
+    if not session.get("admin"):
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+    save_content(data)
+    return jsonify({"ok": True})
+
+# ── Existing webhook routes ───────────────────────────────────────────────────
 
 @app.get("/cowork-replay")
 def cowork_replay():
@@ -50,7 +116,7 @@ def ask():
     user_id = str(data["user_id"])
     vs_id = data.get("vector_store_id") or ensure_vector_store(user_id)
     question = data.get("question", "")
-    history = data.get("history", "")
+    history  = data.get("history", "")
 
     prompt = f"{SYSTEM_PROMPT}\n\nКонтекст:\n{history}\n\nВопрос:\n{question}"
 
@@ -60,3 +126,8 @@ def ask():
         input=prompt
     )
     return jsonify({"ok": True, "answer": resp.output_text})
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

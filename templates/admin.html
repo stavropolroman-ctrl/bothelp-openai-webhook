@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Панель управления — Claude Cowork</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg:      #F0F2F5;
+      --sidebar: #1A2235;
+      --dark:    #1A2235;
+      --accent:  #C4612A;
+      --accent2: #B0571F;
+      --card:    #fff;
+      --border:  #E4E7EC;
+      --text:    #1A2235;
+      --muted:   #6B7280;
+      --light:   #9BA3AF;
+      --success: #16A34A;
+      --danger:  #DC2626;
+      --serif:   Georgia,'Times New Roman',serif;
+      --sans:    -apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+    }
+    html, body { height: 100%; font-family: var(--sans); background: var(--bg); color: var(--text); }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      overflow-y: auto;
+    }
+    .sb-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sb-logo-text {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .sb-logo-text span { color: var(--accent); }
+    .sb-badge {
+      font-size: 10px;
+      color: #7A8A9E;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .sb-nav { padding: 16px 0; flex: 1; }
+    .sb-section-label {
+      font-size: 10px;
+      color: #3A4A5E;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 16px 20px 8px;
+    }
+    .sb-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      color: #9BA3AD;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      border-left: 3px solid transparent;
+    }
+    .sb-link:hover { background: rgba(255,255,255,.05); color: #fff; }
+    .sb-link.active { background: rgba(196,97,42,.15); color: var(--accent); border-left-color: var(--accent); }
+    .sb-link-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sb-bottom {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sb-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.07);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #9BA3AD;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .sb-preview:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .sb-logout {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid rgba(220,38,38,.4);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #F87171;
+      cursor: pointer;
+      width: 100%;
+      transition: background .2s;
+    }
+    .sb-logout:hover { background: rgba(220,38,38,.1); }
+
+    /* ── Main area ── */
+    .main { margin-left: 260px; flex: 1; display: flex; flex-direction: column; }
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .topbar-title { font-size: 18px; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .save-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+    .save-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+    .save-btn:disabled { background: #9BA3AF; cursor: not-allowed; transform: none; }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--success);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 999;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .toast.error { background: var(--danger); }
+    .toast.show { display: flex; }
+
+    /* ── Content area ── */
+    .content { padding: 32px; flex: 1; }
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .card-badge {
+      font-size: 11px;
+      background: rgba(196,97,42,.1);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* ── Form elements ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid.full { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.span2 { grid-column: span 2; }
+    label { font-size: 13px; font-weight: 500; color: var(--muted); }
+    input[type=text], input[type=email], input[type=number], input[type=url], textarea, select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-family: var(--sans);
+      color: var(--text);
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(196,97,42,.12);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Repeater (list items) ── */
+    .repeater { display: flex; flex-direction: column; gap: 14px; }
+    .repeater-item {
+      background: #F8F9FA;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+    }
+    .repeater-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .repeater-item-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .btn-remove {
+      background: none;
+      border: 1px solid #FCA5A5;
+      color: var(--danger);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-remove:hover { background: rgba(220,38,38,.08); }
+    .btn-add {
+      background: none;
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      margin-top: 4px;
+    }
+    .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Stats ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card-num { font-family: var(--serif); font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-card-lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    @media (max-width: 900px) {
+      .sidebar { width: 220px; }
+      .main { margin-left: 220px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.span2 { grid-column: span 1; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-text">Claude<span> Cowork</span></div>
+      <div class="sb-badge">Панель управления</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section-label">Страница</div>
+      <a class="sb-link active" data-panel="panel-general" onclick="showPanel(this)">
+        <span class="sb-link-icon">⚙️</span> Общие настройки
+      </a>
+      <a class="sb-link" data-panel="panel-countdown" onclick="showPanel(this)">
+        <span class="sb-link-icon">⏳</span> Таймер обратного отсчёта
+      </a>
+      <a class="sb-link" data-panel="panel-nav" onclick="showPanel(this)">
+        <span class="sb-link-icon">🧭</span> Навигация
+      </a>
+      <a class="sb-link" data-panel="panel-hero" onclick="showPanel(this)">
+        <span class="sb-link-icon">🎯</span> Hero-секция
+      </a>
+      <a class="sb-link" data-panel="panel-video" onclick="showPanel(this)">
+        <span class="sb-link-icon">🎬</span> Видео-блок
+      </a>
+      <a class="sb-link" data-panel="panel-benefits" onclick="showPanel(this)">
+        <span class="sb-link-icon">✅</span> Преимущества
+      </a>
+      <a class="sb-link" data-panel="panel-program" onclick="showPanel(this)">
+        <span class="sb-link-icon">📋</span> Программа
+      </a>
+      <a class="sb-link" data-panel="panel-speaker" onclick="showPanel(this)">
+        <span class="sb-link-icon">👤</span> Спикер
+      </a>
+      <a class="sb-link" data-panel="panel-testimonials" onclick="showPanel(this)">
+        <span class="sb-link-icon">💬</span> Отзывы
+      </a>
+      <a class="sb-link" data-panel="panel-pricing" onclick="showPanel(this)">
+        <span class="sb-link-icon">💰</span> Тарифы
+      </a>
+      <a class="sb-link" data-panel="panel-faq" onclick="showPanel(this)">
+        <span class="sb-link-icon">❓</span> FAQ
+      </a>
+      <a class="sb-link" data-panel="panel-footer" onclick="showPanel(this)">
+        <span class="sb-link-icon">🔻</span> Футер
+      </a>
+    </nav>
+    <div class="sb-bottom">
+      <a href="/" target="_blank" class="sb-preview">
+        <span>👁</span> Просмотр сайта
+      </a>
+      <button class="sb-logout" onclick="logout()">
+        <span>🚪</span> Выйти
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <span class="topbar-title" id="topbar-title">Общие настройки</span>
+      <div class="topbar-right">
+        <button class="save-btn" onclick="saveAll()">💾 Сохранить изменения</button>
+      </div>
+    </div>
+
+    <!-- Content panels -->
+    <div class="content">
+
+      <!-- Dashboard overview stats -->
+      <div class="stats-row" id="overview-stats">
+        <div class="stat-card"><div class="stat-card-num" id="stat-sections">12</div><div class="stat-card-lbl">Разделов контента</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="stat-benefits">4</div><div class="stat-card-lbl">Преимущества</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="stat-reviews">3</div><div class="stat-card-lbl">Отзывов</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="stat-plans">2</div><div class="stat-card-lbl">Тарифных плана</div></div>
+      </div>
+
+      <!-- General -->
+      <div id="panel-general" class="section-panel active">
+        <div class="card">
+          <div class="card-header"><span class="card-title">SEO и метаданные</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Заголовок сайта (title)</label>
+              <input type="text" id="g-title" placeholder="Claude Cowork: Онлайн-бизнес без вас">
+            </div>
+            <div class="form-group span2">
+              <label>Описание (meta description)</label>
+              <textarea id="g-description" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countdown -->
+      <div id="panel-countdown" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Таймер обратного отсчёта</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Текст над таймером (можно использовать &lt;strong&gt;)</label>
+              <input type="text" id="cd-label">
+            </div>
+            <div class="form-group">
+              <label>Часов от загрузки страницы до дедлайна</label>
+              <input type="number" id="cd-hours" min="1" max="9999">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <div id="panel-nav" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Логотип</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Текст логотипа</label>
+              <input type="text" id="nav-logo">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Ссылки меню</span></div>
+          <div id="nav-links-list" class="repeater"></div>
+          <button class="btn-add" onclick="addNavLink()">+ Добавить ссылку</button>
+        </div>
+      </div>
+
+      <!-- Hero -->
+      <div id="panel-hero" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Hero-секция</span></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Бейдж (маленький текст сверху)</label>
+              <input type="text" id="h-badge">
+            </div>
+            <div class="form-group">
+              <label>Ссылка кнопки CTA</label>
+              <input type="text" id="h-cta-link">
+            </div>
+            <div class="form-group span2">
+              <label>Заголовок (перенос строки = новая строка)</label>
+              <textarea id="h-title" rows="3"></textarea>
+            </div>
+            <div class="form-group span2">
+              <label>Подзаголовок</label>
+              <textarea id="h-subtitle" rows="3"></textarea>
+            </div>
+            <div class="form-group span2">
+              <label>Текст кнопки CTA</label>
+              <input type="text" id="h-cta-text">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video -->
+      <div id="panel-video" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Видео-мокап</span></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Метка (badge над спикером)</label>
+              <input type="text" id="v-label">
+            </div>
+            <div class="form-group">
+              <label>Дата и время</label>
+              <input type="text" id="v-date">
+            </div>
+            <div class="form-group">
+              <label>Заголовок видео</label>
+              <input type="text" id="v-title">
+            </div>
+            <div class="form-group">
+              <label>Подзаголовок (курсив)</label>
+              <input type="text" id="v-subtitle">
+            </div>
+            <div class="form-group span2">
+              <label>Описание</label>
+              <input type="text" id="v-description">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div id="panel-benefits" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Заголовок секции</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Заголовок</label>
+              <input type="text" id="ben-title">
+            </div>
+            <div class="form-group span2">
+              <label>Подзаголовок</label>
+              <input type="text" id="ben-subtitle">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Карточки преимуществ</span>
+            <span class="card-badge" id="ben-count">4 карточки</span>
+          </div>
+          <div id="benefits-list" class="repeater"></div>
+          <button class="btn-add" onclick="addBenefit()">+ Добавить преимущество</button>
+        </div>
+      </div>
+
+      <!-- Program -->
+      <div id="panel-program" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Заголовок секции</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Заголовок</label>
+              <input type="text" id="prog-title">
+            </div>
+            <div class="form-group span2">
+              <label>Подзаголовок</label>
+              <input type="text" id="prog-subtitle">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Модули программы</span></div>
+          <div id="program-list" class="repeater"></div>
+          <button class="btn-add" onclick="addProgramItem()">+ Добавить модуль</button>
+        </div>
+      </div>
+
+      <!-- Speaker -->
+      <div id="panel-speaker" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Данные спикера</span></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Заголовок секции</label>
+              <input type="text" id="sp-title">
+            </div>
+            <div class="form-group">
+              <label>Имя</label>
+              <input type="text" id="sp-name">
+            </div>
+            <div class="form-group span2">
+              <label>Должность / роль</label>
+              <input type="text" id="sp-role">
+            </div>
+            <div class="form-group span2">
+              <label>Биография</label>
+              <textarea id="sp-bio" rows="4"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Статистика</span></div>
+          <div id="speaker-stats-list" class="repeater"></div>
+          <button class="btn-add" onclick="addStat()">+ Добавить статистику</button>
+        </div>
+      </div>
+
+      <!-- Testimonials -->
+      <div id="panel-testimonials" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Заголовок секции</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Заголовок</label>
+              <input type="text" id="testi-title">
+            </div>
+            <div class="form-group span2">
+              <label>Подзаголовок</label>
+              <input type="text" id="testi-subtitle">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Отзывы</span>
+            <span class="card-badge" id="testi-count">3 отзыва</span>
+          </div>
+          <div id="testimonials-list" class="repeater"></div>
+          <button class="btn-add" onclick="addTestimonial()">+ Добавить отзыв</button>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div id="panel-pricing" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Заголовок секции</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Заголовок</label>
+              <input type="text" id="pr-title">
+            </div>
+            <div class="form-group span2">
+              <label>Подзаголовок</label>
+              <input type="text" id="pr-subtitle">
+            </div>
+          </div>
+        </div>
+        <div id="pricing-plans" class="repeater"></div>
+        <button class="btn-add" onclick="addPlan()">+ Добавить тариф</button>
+      </div>
+
+      <!-- FAQ -->
+      <div id="panel-faq" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Заголовок</span></div>
+          <div class="form-grid">
+            <div class="form-group span2">
+              <label>Заголовок секции FAQ</label>
+              <input type="text" id="faq-title">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Вопросы и ответы</span></div>
+          <div id="faq-list" class="repeater"></div>
+          <button class="btn-add" onclick="addFaq()">+ Добавить вопрос</button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div id="panel-footer" class="section-panel">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Футер</span></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Логотип</label>
+              <input type="text" id="ft-logo">
+            </div>
+            <div class="form-group">
+              <label>Слоган</label>
+              <input type="text" id="ft-tagline">
+            </div>
+            <div class="form-group">
+              <label>Подпись поддержки</label>
+              <input type="text" id="ft-support-label">
+            </div>
+            <div class="form-group">
+              <label>Email поддержки</label>
+              <input type="email" id="ft-support-email">
+            </div>
+            <div class="form-group span2">
+              <label>Текст копирайта</label>
+              <input type="text" id="ft-copyright">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Ссылки в футере</span></div>
+          <div id="footer-links-list" class="repeater"></div>
+          <button class="btn-add" onclick="addFooterLink()">+ Добавить ссылку</button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Изменения сохранены</div>
+
+<script>
+let C = {};
+
+// ── Panel navigation ──
+function showPanel(el) {
+  document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const panelId = el.dataset.panel;
+  document.getElementById(panelId).classList.add('active');
+  document.getElementById('topbar-title').textContent = el.textContent.trim().replace(/^\S+\s/,'');
+  // Hide stats row unless on general
+  document.getElementById('overview-stats').style.display = panelId === 'panel-general' ? 'grid' : 'none';
+}
+
+// ── Load content from server ──
+async function loadContent() {
+  const r = await fetch('/api/content');
+  if(r.status === 401){ location.href='/admin/login'; return; }
+  C = await r.json();
+  populateForms();
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById('stat-benefits').textContent = (C.benefits?.items||[]).length;
+  document.getElementById('stat-reviews').textContent  = (C.testimonials?.items||[]).length;
+  document.getElementById('stat-plans').textContent    = (C.pricing?.plans||[]).length;
+}
+
+// ── Populate all forms ──
+function populateForms(){
+  // General
+  setVal('g-title',       C.site?.title       || '');
+  setVal('g-description', C.site?.description || '');
+  // Countdown
+  setVal('cd-label', C.countdown?.label || '');
+  setVal('cd-hours', C.countdown?.hours || 48);
+  // Nav
+  setVal('nav-logo', C.nav?.logo || '');
+  renderNavLinks();
+  // Hero
+  setVal('h-badge',    C.hero?.badge    || '');
+  setVal('h-title',    C.hero?.title    || '');
+  setVal('h-subtitle', C.hero?.subtitle || '');
+  setVal('h-cta-text', C.hero?.cta_text || '');
+  setVal('h-cta-link', C.hero?.cta_link || '');
+  // Video
+  setVal('v-label',       C.video?.label       || '');
+  setVal('v-title',       C.video?.title       || '');
+  setVal('v-subtitle',    C.video?.subtitle    || '');
+  setVal('v-description', C.video?.description || '');
+  setVal('v-date',        C.video?.date        || '');
+  // Benefits
+  setVal('ben-title',    C.benefits?.title    || '');
+  setVal('ben-subtitle', C.benefits?.subtitle || '');
+  renderBenefits();
+  // Program
+  setVal('prog-title',    C.program?.title    || '');
+  setVal('prog-subtitle', C.program?.subtitle || '');
+  renderProgram();
+  // Speaker
+  setVal('sp-title', C.speaker?.title || '');
+  setVal('sp-name',  C.speaker?.name  || '');
+  setVal('sp-role',  C.speaker?.role  || '');
+  setVal('sp-bio',   C.speaker?.bio   || '');
+  renderSpeakerStats();
+  // Testimonials
+  setVal('testi-title',    C.testimonials?.title    || '');
+  setVal('testi-subtitle', C.testimonials?.subtitle || '');
+  renderTestimonials();
+  // Pricing
+  setVal('pr-title',    C.pricing?.title    || '');
+  setVal('pr-subtitle', C.pricing?.subtitle || '');
+  renderPricingPlans();
+  // FAQ
+  setVal('faq-title', C.faq?.title || '');
+  renderFaq();
+  // Footer
+  setVal('ft-logo',          C.footer?.logo          || '');
+  setVal('ft-tagline',       C.footer?.tagline       || '');
+  setVal('ft-support-label', C.footer?.support_label || '');
+  setVal('ft-support-email', C.footer?.support_email || '');
+  setVal('ft-copyright',     C.footer?.copyright     || '');
+  renderFooterLinks();
+}
+
+function setVal(id, val){ const el = document.getElementById(id); if(el) el.value = val; }
+function getVal(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+
+// ── Nav links ──
+function renderNavLinks(){
+  const list = document.getElementById('nav-links-list');
+  list.innerHTML = '';
+  (C.nav?.links||[]).forEach((l,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Ссылка #${i+1}</span>
+        <button class="btn-remove" onclick="removeNavLink(${i})">Удалить</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Текст</label><input type="text" id="nl-text-${i}" value="${esc(l.text)}"></div>
+        <div class="form-group"><label>Ссылка (href)</label><input type="text" id="nl-href-${i}" value="${esc(l.href)}"></div>
+      </div>
+    </div>`;
+  });
+}
+function addNavLink(){ C.nav.links.push({text:'Новая ссылка',href:'#'}); renderNavLinks(); }
+function removeNavLink(i){ C.nav.links.splice(i,1); renderNavLinks(); }
+function collectNavLinks(){
+  return (C.nav?.links||[]).map((_,i) => ({text: getVal(`nl-text-${i}`), href: getVal(`nl-href-${i}`)}));
+}
+
+// ── Benefits ──
+function renderBenefits(){
+  const list = document.getElementById('benefits-list');
+  list.innerHTML = '';
+  (C.benefits?.items||[]).forEach((b,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Карточка #${i+1}</span>
+        <button class="btn-remove" onclick="removeBenefit(${i})">Удалить</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Иконка (emoji)</label><input type="text" id="ben-icon-${i}" value="${esc(b.icon)}"></div>
+        <div class="form-group"><label>Заголовок</label><input type="text" id="ben-item-title-${i}" value="${esc(b.title)}"></div>
+        <div class="form-group span2"><label>Описание</label><textarea id="ben-item-text-${i}" rows="2">${esc(b.text)}</textarea></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('ben-count').textContent = (C.benefits?.items||[]).length + ' карточки';
+}
+function addBenefit(){ C.benefits.items.push({icon:'⭐',title:'Новое',text:''}); renderBenefits(); }
+function removeBenefit(i){ C.benefits.items.splice(i,1); renderBenefits(); }
+function collectBenefits(){
+  return (C.benefits?.items||[]).map((_,i) => ({
+    icon: getVal(`ben-icon-${i}`),
+    title: getVal(`ben-item-title-${i}`),
+    text: getVal(`ben-item-text-${i}`)
+  }));
+}
+
+// ── Program ──
+function renderProgram(){
+  const list = document.getElementById('program-list');
+  list.innerHTML = '';
+  (C.program?.items||[]).forEach((p,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Модуль #${i+1}</span>
+        <button class="btn-remove" onclick="removeProgramItem(${i})">Удалить</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Номер</label><input type="text" id="prog-num-${i}" value="${esc(p.num)}"></div>
+        <div class="form-group"><label>Заголовок модуля</label><input type="text" id="prog-item-title-${i}" value="${esc(p.title)}"></div>
+        <div class="form-group span2"><label>Описание</label><textarea id="prog-item-text-${i}" rows="2">${esc(p.text)}</textarea></div>
+      </div>
+    </div>`;
+  });
+}
+function addProgramItem(){ const n = (C.program.items.length+1).toString().padStart(2,'0'); C.program.items.push({num:n,title:'Новый модуль',text:''}); renderProgram(); }
+function removeProgramItem(i){ C.program.items.splice(i,1); renderProgram(); }
+function collectProgram(){
+  return (C.program?.items||[]).map((_,i) => ({
+    num: getVal(`prog-num-${i}`),
+    title: getVal(`prog-item-title-${i}`),
+    text: getVal(`prog-item-text-${i}`)
+  }));
+}
+
+// ── Speaker stats ──
+function renderSpeakerStats(){
+  const list = document.getElementById('speaker-stats-list');
+  list.innerHTML = '';
+  (C.speaker?.stats||[]).forEach((s,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Статистика #${i+1}</span>
+        <button class="btn-remove" onclick="removeStat(${i})">Удалить</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Число / значение</label><input type="text" id="stat-num-${i}" value="${esc(s.num)}"></div>
+        <div class="form-group"><label>Подпись</label><input type="text" id="stat-lbl-${i}" value="${esc(s.label)}"></div>
+      </div>
+    </div>`;
+  });
+}
+function addStat(){ C.speaker.stats.push({num:'0',label:''}); renderSpeakerStats(); }
+function removeStat(i){ C.speaker.stats.splice(i,1); renderSpeakerStats(); }
+function collectStats(){
+  return (C.speaker?.stats||[]).map((_,i) => ({num: getVal(`stat-num-${i}`), label: getVal(`stat-lbl-${i}`)}));
+}
+
+// ── Testimonials ──
+function renderTestimonials(){
+  const list = document.getElementById('testimonials-list');
+  list.innerHTML = '';
+  (C.testimonials?.items||[]).forEach((t,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Отзыв #${i+1}</span>
+        <button class="btn-remove" onclick="removeTestimonial(${i})">Удалить</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Имя</label><input type="text" id="t-name-${i}" value="${esc(t.name)}"></div>
+        <div class="form-group"><label>Должность</label><input type="text" id="t-role-${i}" value="${esc(t.role)}"></div>
+        <div class="form-group"><label>Рейтинг (1–5)</label><input type="number" id="t-rating-${i}" value="${t.rating}" min="1" max="5"></div>
+        <div class="form-group span2"><label>Текст отзыва</label><textarea id="t-text-${i}" rows="3">${esc(t.text)}</textarea></div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('testi-count').textContent = (C.testimonials?.items||[]).length + ' отзыва';
+}
+function addTestimonial(){ C.testimonials.items.push({name:'',role:'',text:'',rating:5}); renderTestimonials(); }
+function removeTestimonial(i){ C.testimonials.items.splice(i,1); renderTestimonials(); }
+function collectTestimonials(){
+  return (C.testimonials?.items||[]).map((_,i) => ({
+    name: getVal(`t-name-${i}`),
+    role: getVal(`t-role-${i}`),
+    text: getVal(`t-text-${i}`),
+    rating: parseInt(getVal(`t-rating-${i}`)) || 5
+  }));
+}
+
+// ── Pricing plans ──
+function renderPricingPlans(){
+  const list = document.getElementById('pricing-plans');
+  list.innerHTML = '';
+  (C.pricing?.plans||[]).forEach((p,i) => {
+    list.innerHTML += `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Тариф #${i+1}: ${esc(p.name)}</span>
+        <button class="btn-remove" onclick="removePlan(${i})">Удалить тариф</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Название тарифа</label><input type="text" id="pl-name-${i}" value="${esc(p.name)}"></div>
+        <div class="form-group"><label>Бейдж (необяз.)</label><input type="text" id="pl-badge-${i}" value="${esc(p.badge||'')}"></div>
+        <div class="form-group"><label>Цена</label><input type="text" id="pl-price-${i}" value="${esc(p.price)}"></div>
+        <div class="form-group"><label>Старая цена (зачёркнутая)</label><input type="text" id="pl-old-${i}" value="${esc(p.old_price||'')}"></div>
+        <div class="form-group"><label>Валюта</label><input type="text" id="pl-cur-${i}" value="${esc(p.currency||'₽')}"></div>
+        <div class="form-group"><label>Текст кнопки</label><input type="text" id="pl-cta-${i}" value="${esc(p.cta)}"></div>
+        <div class="form-group"><label>Ссылка кнопки</label><input type="text" id="pl-cta-link-${i}" value="${esc(p.cta_link||'#')}"></div>
+        <div class="form-group"><label>Выделенный тариф</label>
+          <select id="pl-highlight-${i}">
+            <option value="false" ${!p.highlight?'selected':''}>Нет</option>
+            <option value="true"  ${p.highlight?'selected':''}>Да (акцентный)</option>
+          </select>
+        </div>
+        <div class="form-group span2">
+          <label>Список включённого (каждый пункт с новой строки)</label>
+          <textarea id="pl-features-${i}" rows="5">${(p.features||[]).join('\n')}</textarea>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+function addPlan(){ C.pricing.plans.push({name:'Новый тариф',price:'0',old_price:'',currency:'₽',features:[],cta:'Купить',cta_link:'#',highlight:false}); renderPricingPlans(); }
+function removePlan(i){ C.pricing.plans.splice(i,1); renderPricingPlans(); }
+function collectPlans(){
+  return (C.pricing?.plans||[]).map((_,i) => ({
+    name:      getVal(`pl-name-${i}`),
+    badge:     getVal(`pl-badge-${i}`) || undefined,
+    price:     getVal(`pl-price-${i}`),
+    old_price: getVal(`pl-old-${i}`),
+    currency:  getVal(`pl-cur-${i}`),
+    cta:       getVal(`pl-cta-${i}`),
+    cta_link:  getVal(`pl-cta-link-${i}`),
+    highlight: getVal(`pl-highlight-${i}`) === 'true',
+    features:  getVal(`pl-features-${i}`).split('\n').filter(f=>f.trim())
+  }));
+}
+
+// ── FAQ ──
+function renderFaq(){
+  const list = document.getElementById('faq-list');
+  list.innerHTML = '';
+  (C.faq?.items||[]).forEach((f,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Вопрос #${i+1}</span>
+        <button class="btn-remove" onclick="removeFaq(${i})">Удалить</button>
+      </div>
+      <div class="form-grid full">
+        <div class="form-group"><label>Вопрос</label><input type="text" id="faq-q-${i}" value="${esc(f.q)}"></div>
+        <div class="form-group"><label>Ответ</label><textarea id="faq-a-${i}" rows="3">${esc(f.a)}</textarea></div>
+      </div>
+    </div>`;
+  });
+}
+function addFaq(){ C.faq.items.push({q:'Новый вопрос',a:''}); renderFaq(); }
+function removeFaq(i){ C.faq.items.splice(i,1); renderFaq(); }
+function collectFaq(){
+  return (C.faq?.items||[]).map((_,i) => ({q: getVal(`faq-q-${i}`), a: getVal(`faq-a-${i}`)}));
+}
+
+// ── Footer links ──
+function renderFooterLinks(){
+  const list = document.getElementById('footer-links-list');
+  list.innerHTML = '';
+  (C.footer?.links||[]).forEach((l,i) => {
+    list.innerHTML += `
+    <div class="repeater-item">
+      <div class="repeater-item-header">
+        <span class="repeater-item-label">Ссылка #${i+1}</span>
+        <button class="btn-remove" onclick="removeFooterLink(${i})">Удалить</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Текст</label><input type="text" id="ftl-text-${i}" value="${esc(l.text)}"></div>
+        <div class="form-group"><label>Ссылка</label><input type="text" id="ftl-href-${i}" value="${esc(l.href)}"></div>
+      </div>
+    </div>`;
+  });
+}
+function addFooterLink(){ C.footer.links.push({text:'',href:'#'}); renderFooterLinks(); }
+function removeFooterLink(i){ C.footer.links.splice(i,1); renderFooterLinks(); }
+function collectFooterLinks(){
+  return (C.footer?.links||[]).map((_,i) => ({text: getVal(`ftl-text-${i}`), href: getVal(`ftl-href-${i}`)}));
+}
+
+// ── Collect all data ──
+function collectAll(){
+  return {
+    site:         { title: getVal('g-title'), description: getVal('g-description') },
+    countdown:    { label: getVal('cd-label'), hours: parseInt(getVal('cd-hours'))||48 },
+    nav:          { logo: getVal('nav-logo'), links: collectNavLinks() },
+    hero:         { badge: getVal('h-badge'), title: getVal('h-title'), subtitle: getVal('h-subtitle'), cta_text: getVal('h-cta-text'), cta_link: getVal('h-cta-link') },
+    video:        { label: getVal('v-label'), title: getVal('v-title'), subtitle: getVal('v-subtitle'), description: getVal('v-description'), date: getVal('v-date') },
+    benefits:     { title: getVal('ben-title'), subtitle: getVal('ben-subtitle'), items: collectBenefits() },
+    program:      { title: getVal('prog-title'), subtitle: getVal('prog-subtitle'), items: collectProgram() },
+    speaker:      { title: getVal('sp-title'), name: getVal('sp-name'), role: getVal('sp-role'), bio: getVal('sp-bio'), stats: collectStats() },
+    testimonials: { title: getVal('testi-title'), subtitle: getVal('testi-subtitle'), items: collectTestimonials() },
+    pricing:      { title: getVal('pr-title'), subtitle: getVal('pr-subtitle'), plans: collectPlans() },
+    faq:          { title: getVal('faq-title'), items: collectFaq() },
+    footer:       { logo: getVal('ft-logo'), tagline: getVal('ft-tagline'), support_label: getVal('ft-support-label'), support_email: getVal('ft-support-email'), copyright: getVal('ft-copyright'), links: collectFooterLinks() }
+  };
+}
+
+// ── Save ──
+async function saveAll(){
+  const btn = document.querySelector('.save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Сохранение…';
+  try {
+    const data = collectAll();
+    const r = await fetch('/api/content', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if(r.status === 401){ location.href='/admin/login'; return; }
+    C = data;
+    updateStats();
+    showToast('✓ Изменения сохранены');
+  } catch(e) {
+    showToast('✗ Ошибка сохранения', true);
+  }
+  btn.disabled = false;
+  btn.textContent = '💾 Сохранить изменения';
+}
+
+function showToast(msg, err=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err?' error':'');
+  setTimeout(()=>{ t.className = 'toast'; }, 3000);
+}
+
+async function logout(){
+  await fetch('/admin/logout');
+  location.href = '/admin/login';
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Auto-save on Ctrl+S
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){ e.preventDefault(); saveAll(); }
+});
+
+// Init
+loadContent();
+</script>
+</body>
+</html>
