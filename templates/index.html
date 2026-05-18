@@ -571,7 +571,7 @@
   <div class="nav-inner">
     <a href="/" class="nav-logo">{{ c.nav.logo[:6] }}<span>{{ c.nav.logo[6:] }}</span></a>
     <ul class="nav-links">
-      {% for l in c.nav.links %}
+      {% for l in c.nav["links"] %}
       <li><a href="{{ l.href }}">{{ l.text }}</a></li>
       {% endfor %}
     </ul>
@@ -623,7 +623,7 @@
       <p class="section-sub">{{ c.benefits.subtitle }}</p>
     </div>
     <div class="benefits-grid">
-      {% for item in c.benefits.items %}
+      {% for item in c.benefits["items"] %}
       <div class="benefit-card">
         <div class="benefit-icon">{{ item.icon }}</div>
         <h3 class="benefit-title">{{ item.title }}</h3>
@@ -643,7 +643,7 @@
       <p class="section-sub">{{ c.program.subtitle }}</p>
     </div>
     <div class="program-grid">
-      {% for item in c.program.items %}
+      {% for item in c.program["items"] %}
       <div class="prog-card">
         <div class="prog-num">{{ item.num }}</div>
         <div>
@@ -670,7 +670,7 @@
         <p class="speaker-role">{{ c.speaker.role }}</p>
         <p class="speaker-bio">{{ c.speaker.bio }}</p>
         <div class="speaker-stats">
-          {% for s in c.speaker.stats %}
+          {% for s in c.speaker["stats"] %}
           <div class="stat-item">
             <div class="stat-num">{{ s.num }}</div>
             <div class="stat-lbl">{{ s.label }}</div>
@@ -691,7 +691,7 @@
       <p class="section-sub">{{ c.testimonials.subtitle }}</p>
     </div>
     <div class="testi-grid">
-      {% for t in c.testimonials.items %}
+      {% for t in c.testimonials["items"] %}
       <div class="testi-card">
         <div class="testi-stars">{% for i in range(t.rating) %}★{% endfor %}</div>
         <p class="testi-text">«{{ t.text }}»</p>
@@ -717,7 +717,7 @@
       <p class="section-sub">{{ c.pricing.subtitle }}</p>
     </div>
     <div class="pricing-grid">
-      {% for plan in c.pricing.plans %}
+      {% for plan in c.pricing["plans"] %}
       <div class="plan-card {% if plan.highlight %}highlight{% endif %}">
         {% if plan.badge is defined %}<div class="plan-badge">{{ plan.badge }}</div>{% endif %}
         <div class="plan-name">{{ plan.name }}</div>
@@ -747,7 +747,7 @@
       <h2 class="section-title">{{ c.faq.title }}</h2>
     </div>
     <div class="faq-list">
-      {% for item in c.faq.items %}
+      {% for item in c.faq["items"] %}
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this.parentElement)">
           <span>{{ item.q }}</span>
@@ -769,7 +769,7 @@
         <div class="footer-tagline">{{ c.footer.tagline }}</div>
       </div>
       <div class="footer-links">
-        {% for l in c.footer.links %}
+        {% for l in c.footer["links"] %}
         <a href="{{ l.href }}">{{ l.text }}</a>
         {% endfor %}
       </div>
