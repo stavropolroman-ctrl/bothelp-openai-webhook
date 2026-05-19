@@ -5,7 +5,12 @@ import os, tempfile, requests, json
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
 
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+_client = None
+def get_client():
+    global _client
+    if _client is None:
+        _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return _client
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 CONTENT_FILE   = os.path.join(os.path.dirname(os.path.abspath(__file__)) or os.getcwd(), "content.json")
 
@@ -88,7 +93,7 @@ SYSTEM_PROMPT = (
 def ensure_vector_store(user_id):
     vs_id = USER_STORES.get(user_id)
     if not vs_id:
-        vs = client.vector_stores.create(name=f"tg_{user_id}")
+        vs = get_client().vector_stores.create(name=f"tg_{user_id}")
         vs_id = vs.id
         USER_STORES[user_id] = vs_id
     return vs_id
@@ -105,8 +110,8 @@ def upload():
         f.write(r.content)
         path = f.name
 
-    up = client.files.create(file=open(path, "rb"), purpose="assistants")
-    client.vector_stores.files.create(vector_store_id=vs_id, file_id=up.id)
+    up = get_client().files.create(file=open(path, "rb"), purpose="assistants")
+    get_client().vector_stores.files.create(vector_store_id=vs_id, file_id=up.id)
 
     return jsonify({"ok": True, "vector_store_id": vs_id})
 
@@ -120,7 +125,7 @@ def ask():
 
     prompt = f"{SYSTEM_PROMPT}\n\nКонтекст:\n{history}\n\nВопрос:\n{question}"
 
-    resp = client.responses.create(
+    resp = get_client().responses.create(
         model="gpt-4o-mini",
         tools=[{"type": "file_search", "vector_store_ids": [vs_id]}],
         input=prompt
